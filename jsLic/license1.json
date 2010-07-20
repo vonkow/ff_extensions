@@ -1,0 +1,13 @@
+{
+	"license" : {
+		"author"  : "Foo Bar",
+		"contact" : "foo@bar.org",
+		"notes"   : "None",
+		"source"  : ["./script1_src.js"],
+		"libs"    : ["http://path.to/external/library"],
+		"licenses" : {
+			"gpl" : "http://www.fsf.org/licenses/gpl-3.0.html",
+			"mit-style" : "http://path.to/license"
+		}
+	}
+}
