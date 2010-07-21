@@ -3,6 +3,7 @@ if ('undefined' == typeof(passoverExt)) {
 };
 
 passoverExt.data = {
+	killOffenders : false,
 	toParse: 0,
 	parsed: []
 };
@@ -39,38 +40,67 @@ passoverExt.getLicense = function(license) {
 	xhr.open('GET', license, true);
 	xhr.send(null);
 	passoverExt.data.toParse++;
-}
+};
+
+passoverExt.makeLine=function(prop, ob, doc) {
+};
 
 passoverExt.makePage=function() {
 	var newTabBrowser = gBrowser.getBrowserForTab(gBrowser.addTab('about:blank'));
 	newTabBrowser.addEventListener("load", function() {
+		var theDoc = newTabBrowser.contentDocument;
 		for (var x=0; x<passoverExt.data.parsed.length; x++) {
 			var licData=passoverExt.data.parsed[x].license;
-			var licArea = newTabBrowser.contentDocument.createElement('ul');
+			var licArea = theDoc.createElement('ul');
 			for (licProp in licData) {
-				var tempP = newTabBrowser.contentDocument.createElement('li');
-				if ('object' == typeof(licData[licProp])) {
-					var tempList = newTabBrowser.contentDocument.createElement('ul');
-					for (subProp in licData[licProp]) {
-						var tempLP = newTabBrowser.contentDocument.createElement('li');
-						var tempLC = subProp+' : '+licData[licProp][subProp];
-						var tempLT = newTabBrowser.contentDocument.createTextNode(tempLC);
+				var tempP = theDoc.createElement('li');
+				if (licData[licProp] instanceof Array) {
+					var tempC = theDoc.createTextNode(licProp+ ' :');
+					var tempB = theDoc.createElement('br');
+					var tempList = theDoc.createElement('ul');
+					for (var y=0;y<licData[licProp].length; y++) {
+						var tempLP = theDoc.createElement('li');
+						var tempLC = licData[licProp][x];
+						var tempLT = theDoc.createTextNode(tempLC);
 						tempLP.appendChild(tempLT);
 						tempList.appendChild(tempLP);
 					}
+					tempP.appendChild(tempC);
+					tempP.appendChild(tempB);
+					tempP.appendChild(tempList);
+					licArea.appendChild(tempP);
+
+				} else if ('object' == typeof(licData[licProp])) {
+					var tempC = theDoc.createTextNode(licProp+ ' :');
+					var tempB = theDoc.createElement('br');
+					var tempList = theDoc.createElement('ul');
+					for (subProp in licData[licProp]) {
+						var tempLP = theDoc.createElement('li');
+						var tempLC = subProp+' : '+licData[licProp][subProp];
+						var tempLT = theDoc.createTextNode(tempLC);
+						tempLP.appendChild(tempLT);
+						tempList.appendChild(tempLP);
+					}
+					tempP.appendChild(tempC);
+					tempP.appendChild(tempB);
 					tempP.appendChild(tempList);
 					licArea.appendChild(tempP);
 				} else {
-					var tempC = licProp+' : '+licData[licProp];
-					var tempT = newTabBrowser.contentDocument.createTextNode(tempC);
-					tempP.appendChild(tempT);
+					if (licData[licProp].indexOf('http://') != -1) {
+						var tempC = theDoc.createTextNode(licProp+' : ');
+						var tempA = theDoc.createElement('a');
+						tempA.appendChild(theDoc.createTextNode(licData[licProp]));
+						tempA.href = licData[licProp];
+						tempP.appendChild(tempC);
+						tempP.appendChild(tempA);
+					} else {
+						var tempC = theDoc.createTextNode(licProp+' : '+licData[licProp]);
+						tempP.appendChild(tempC);
+					};
 					licArea.appendChild(tempP);
-				};
-			}
-			var licText = newTabBrowser.contentDocument.createTextNode(passoverExt.data.parsed[x].license.author);
-			//var licText = newTabBrowser.contentDocument.createTextNode(JSON.stringify(licData));
-			licArea.appendChild(licText);
-			newTabBrowser.contentDocument.body.appendChild(licArea);
+				}
+			};
+			theDoc.body.appendChild(licArea);
 		};
 	}, true);
 };
@@ -83,13 +113,19 @@ passoverExt.check=function(event) {
 				doc = doc.defaultView.frameElement.ownerDocument;
 			}
 		}
-	}
+	};
 	var scriptEles = doc.getElementsByTagName('script');
-	//window.alert(scriptEles.length);
-	for (var x=0; x<scriptEles.length;x++) {
-		if (!scriptEles[x].getAttribute('data-license')) {
-			//scriptEles[x].parentNode.removeChild(scriptEles[x]);
-			//x--;
+	if (scriptEles.length) {
+		if (!scriptEles[0].getAttribute('data-license-full')) {
+			for (var x=0; x<scriptEles.length;x++) {
+				if (!scriptEles[x].getAttribute('data-license')) {
+					//if (passoverExt.data.killOffenders) {
+						//scriptEles[x].parentNode.removeChild(scriptEles[x]);
+						//x--;
+					//}
+				}
+			}
+		} else {
 		}
 	}
 };
@@ -97,15 +133,22 @@ passoverExt.check=function(event) {
 passoverExt.test = function(event) {
 	var doc = gBrowser.contentDocument;
 	var scriptEles = doc.getElementsByTagName('script');
-	for (var x=0; x<scriptEles.length; x++) {
-		if (scriptEles[x].getAttribute('data-license')) {
-			passoverExt.getLicense(scriptEles[x].getAttribute('data-license'));
-			//window.alert('good');
+	if (scriptEles.length) {
+		if (!scriptEles[0].getAttribute('data-license-full')) {
+			for (var x=0; x<scriptEles.length; x++) {
+				if (scriptEles[x].getAttribute('data-license')) {
+					passoverExt.getLicense(scriptEles[x].getAttribute('data-license'));
+				} else {
+					//if (passoverExt.data.killOffenders) {
+						//scriptEles[x].parentNode.removeChild(scriptEles[x]);
+						//x--;
+					//}
+				}
+			}
 		} else {
-			//window.alert('bad');
+			passoverExt.getLicense(scriptEles[0].getAttribute('data-license-full'));
 		}
-	};
-	//window.alert(scriptEles.length);
+	}
 };
 
 window.addEventListener('load',function(){gBrowser.addEventListener('load',passoverExt.check,true)},true);
