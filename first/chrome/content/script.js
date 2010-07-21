@@ -26,27 +26,54 @@ passoverExt.getLicense = function(license) {
 	xhr.onreadystatechange=function(event) {
 		if (this.readyState==4) {
 			passoverExt.data.toParse--;
-			passoverExt.data.parsed.push(this.responseText);
-			if (!passoverExt.data.toParse) {
-				var newTabBrowser = gBrowser.getBrowserForTab(gBrowser.addTab('about:blank'));
-				newTabBrowser.addEventListener("load", function() {
-					for (var x=0; x<passoverExt.data.parsed.length; x++) {
-						//var licData=JSON.parse(passoverExt.data.parsed[x]);
-						var licArea = newTabBrowser.contentDocument.createElement('div');
-						var licText = newTabBrowser.contentDocument.createTextNode(passoverExt.data.parsed[x]);
-						//var licText = newTabBrowser.contentDocument.createTextNode(JSON.stringify(licData));
-						licArea.appendChild(licText);
-						newTabBrowser.contentDocument.body.appendChild(licArea);
-					};
-				}, true);
+			if (!window['JSON']) {
+				passoverExt.data.parsed.push(eval('('+this.responseText+')'));
+			} else {
+				passoverExt.data.parsed.push(JSON.parse(this.responseText));
 			};
-			//alert(this.responseText);
+			if (!passoverExt.data.toParse) {
+				passoverExt.makePage();
+			};
 		}
 	}
 	xhr.open('GET', license, true);
 	xhr.send(null);
 	passoverExt.data.toParse++;
 }
+
+passoverExt.makePage=function() {
+	var newTabBrowser = gBrowser.getBrowserForTab(gBrowser.addTab('about:blank'));
+	newTabBrowser.addEventListener("load", function() {
+		for (var x=0; x<passoverExt.data.parsed.length; x++) {
+			var licData=passoverExt.data.parsed[x].license;
+			var licArea = newTabBrowser.contentDocument.createElement('ul');
+			for (licProp in licData) {
+				var tempP = newTabBrowser.contentDocument.createElement('li');
+				if ('object' == typeof(licData[licProp])) {
+					var tempList = newTabBrowser.contentDocument.createElement('ul');
+					for (subProp in licData[licProp]) {
+						var tempLP = newTabBrowser.contentDocument.createElement('li');
+						var tempLC = subProp+' : '+licData[licProp][subProp];
+						var tempLT = newTabBrowser.contentDocument.createTextNode(tempLC);
+						tempLP.appendChild(tempLT);
+						tempList.appendChild(tempLP);
+					}
+					tempP.appendChild(tempList);
+					licArea.appendChild(tempP);
+				} else {
+					var tempC = licProp+' : '+licData[licProp];
+					var tempT = newTabBrowser.contentDocument.createTextNode(tempC);
+					tempP.appendChild(tempT);
+					licArea.appendChild(tempP);
+				};
+			}
+			var licText = newTabBrowser.contentDocument.createTextNode(passoverExt.data.parsed[x].license.author);
+			//var licText = newTabBrowser.contentDocument.createTextNode(JSON.stringify(licData));
+			licArea.appendChild(licText);
+			newTabBrowser.contentDocument.body.appendChild(licArea);
+		};
+	}, true);
+};
 
 passoverExt.check=function(event) {
 	let doc = event.originalTarget;
