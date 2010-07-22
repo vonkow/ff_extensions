@@ -1,0 +1,29 @@
+Different Methods of indicating a license in a js file:
+
+StatusNet:
+	Goes with the jsDoc style of @tags in comments.
+	@category
+	@package
+	@author (multiple) (format: name <email>)
+	@copyright (format: date by)
+	@license (format: link license_title)
+	@link 
+
+jQuery:
+	License info in comments, no tags (comment starts with an !):
+		Title
+		website
+		copyright year, author
+		"Dual licensed under the MIT or GPL Version 2 licenses
+		license page address
+
+		Includes Sizzle.js
+		website
+		copyright
+		license info, barely
+
+		full date of release
+
+THOUGHTS:
+	The jsDoc method of license identification can be parsed pretty easily, and matches the RMS proposed method, this should be supported.
+	The jQuery style, while containing the pertinant info, is not easily parsed. Perhaps some primative grepping of license info could occur, but I doubt that passover will have 100% accuracy if it's checking untagged comments.

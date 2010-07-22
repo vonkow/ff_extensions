@@ -1,14 +1,18 @@
-if ('undefined' == typeof(passoverExt)) {
-	var passoverExt ={};
+if ('undefined' == typeof(passover)) {
+	var passover = {};
 };
 
-passoverExt.data = {
+// Simple Datastore for keeping track of remaining script nodes to parse
+// Also stores a bool for whether non-licensed scripts should be killed on sight.
+// This bool should be moved into a preferences type datastore, as this isn't persistant.
+passover.data = {
 	killOffenders : false,
 	toParse: 0,
 	parsed: []
 };
 
-passoverExt.handleClick = function(event) {
+// Does nothing yet, will be used for differentiating between left and right click on the passover buton
+passover.handleClick = function(event) {
 	//show the menu on right-click
 	if (event.target.id == "passover-panel") {
 		/*
@@ -22,35 +26,39 @@ passoverExt.handleClick = function(event) {
 	}
 };
 
-passoverExt.getLicense = function(license) {
+// Makes AJAX request for json license file
+// Once all licenses have been downloaded, it calls makePage() to populate the info page
+passover.getLicense = function(license) {
 	var xhr= new XMLHttpRequest();
 	xhr.onreadystatechange=function(event) {
 		if (this.readyState==4) {
-			passoverExt.data.toParse--;
+			passover.data.toParse--;
 			if (!window['JSON']) {
-				passoverExt.data.parsed.push(eval('('+this.responseText+')'));
+				passover.data.parsed.push(eval('('+this.responseText+')'));
 			} else {
-				passoverExt.data.parsed.push(JSON.parse(this.responseText));
+				passover.data.parsed.push(JSON.parse(this.responseText));
 			};
-			if (!passoverExt.data.toParse) {
-				passoverExt.makePage();
+			if (!passover.data.toParse) {
+				passover.makePage();
 			};
 		}
 	}
 	xhr.open('GET', license, true);
 	xhr.send(null);
-	passoverExt.data.toParse++;
+	passover.data.toParse++;
 };
 
-passoverExt.makeLine=function(prop, ob, doc) {
+passover.makeLine=function(prop, ob, doc) {
 };
 
-passoverExt.makePage=function() {
+// Makes a page with all license info from a site. This info should show up in a little popup indstead,
+// but I need to learn more XUL
+passover.makePage=function() {
 	var newTabBrowser = gBrowser.getBrowserForTab(gBrowser.addTab('about:blank'));
 	newTabBrowser.addEventListener("load", function() {
 		var theDoc = newTabBrowser.contentDocument;
-		for (var x=0; x<passoverExt.data.parsed.length; x++) {
-			var licData=passoverExt.data.parsed[x].license;
+		for (var x=0; x<passover.data.parsed.length; x++) {
+			var licData=passover.data.parsed[x].license;
 			var licArea = theDoc.createElement('ul');
 			for (licProp in licData) {
 				var tempP = theDoc.createElement('li');
@@ -105,7 +113,9 @@ passoverExt.makePage=function() {
 	}, true);
 };
 
-passoverExt.check=function(event) {
+// Checks all script elements on a page for whether they have a data-license attribute or not
+// Does nothing at the moment, called on pageload
+passover.check=function(event) {
 	let doc = event.originalTarget;
 	if (doc instanceof HTMLDocument) {
 		if (doc.defaultView.frameElement) {
@@ -119,7 +129,7 @@ passoverExt.check=function(event) {
 		if (!scriptEles[0].getAttribute('data-license-full')) {
 			for (var x=0; x<scriptEles.length;x++) {
 				if (!scriptEles[x].getAttribute('data-license')) {
-					//if (passoverExt.data.killOffenders) {
+					//if (passover.data.killOffenders) {
 						//scriptEles[x].parentNode.removeChild(scriptEles[x]);
 						//x--;
 					//}
@@ -130,25 +140,44 @@ passoverExt.check=function(event) {
 	}
 };
 
-passoverExt.test = function(event) {
+// Returns the content of the specified script element,
+// When getting content via src, it makes an SJAX request, this could hang on a bad connection.
+passover.scanScript = function(ele) {
+	if (!ele.src) {
+		if (ele.firstChild) {
+			var scriptSrc = ele.firstChild.nodeValue;
+			return scriptSrc;
+		}
+	} else {
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", ele.src, false);
+		xhr.send(null);
+		var scriptSrc = xhr.responseText;
+		return scriptSrc;
+	};
+};
+
+// Checks all script elements on a page for data-license attributes, then gets the data and displays it
+passover.test = function(event) {
 	var doc = gBrowser.contentDocument;
 	var scriptEles = doc.getElementsByTagName('script');
 	if (scriptEles.length) {
 		if (!scriptEles[0].getAttribute('data-license-full')) {
 			for (var x=0; x<scriptEles.length; x++) {
 				if (scriptEles[x].getAttribute('data-license')) {
-					passoverExt.getLicense(scriptEles[x].getAttribute('data-license'));
+					passover.getLicense(scriptEles[x].getAttribute('data-license'));
 				} else {
-					//if (passoverExt.data.killOffenders) {
+					alert(passover.scanScript(scriptEles[x]));
+					//if (passover.data.killOffenders) {
 						//scriptEles[x].parentNode.removeChild(scriptEles[x]);
 						//x--;
 					//}
 				}
 			}
 		} else {
-			passoverExt.getLicense(scriptEles[0].getAttribute('data-license-full'));
+			passover.getLicense(scriptEles[0].getAttribute('data-license-full'));
 		}
 	}
 };
 
-window.addEventListener('load',function(){gBrowser.addEventListener('load',passoverExt.check,true)},true);
+window.addEventListener('load',function(){gBrowser.addEventListener('load',passover.check,true)},true);

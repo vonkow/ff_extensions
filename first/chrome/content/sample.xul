@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
+
 <overlay id="sample" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  <script type="application/x-javascript"
   src="chrome://sample/content/script.js" />
  <popupset id="mainPopupSet">
   <menupopup id="passover-popup">
-   <menuitem label="first" oncommand="passoverExt.test(event)"/>
+   <menuitem label="first" oncommand="passover.test(event)"/>
    <menuitem label="second"/>
   </menupopup>
  </popupset>
 
-
  <statusbar id="status-bar">
   <statusbarpanel id="passover-panel" label="Check Licenses" popup="passover-popup"
-  onclick="passoverExt.handleClick(event)"/>
+  onclick="passover.handleClick(event)"/>
  </statusbar>
 </overlay>
 
