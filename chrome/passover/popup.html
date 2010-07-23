@@ -1,1 +1,33 @@
-Hi!
+<div id="lic-data">
+</div>
+<script>
+chrome.tabs.getSelected(null, function(tab) {
+	chrome.tabs.sendRequest(tab.id, {method: "getLicenses", tabid: tab.id}, function(response) {
+		showData(response.data);
+	});
+});
+
+var displayLicense=function(l, n) {
+	var lArea = document.createElement('div');
+	lArea.id = 'license-'+n
+	if (l.author) {
+		if (l.author instanceof Object) {
+		} else {
+			var auth = document.createElement('p');
+			var authT = document.createTextNode('Author: '+l.author);
+			auth.appendChild(authT);
+			lArea.appendChild(auth);
+		}
+	}
+	document.getElementById('lic-data').appendChild(lArea);
+};
+
+var showData=function(lics) {
+	for (var x=0; x<lics.length; x++) {
+		var lic = lics[x];
+		if (lic.license) {
+			displayLicense(lic.license, x);
+		}
+	}
+};
+</script>

@@ -1,0 +1,27 @@
+<html>
+<script>
+/*
+var popupTabUrl = chrome.extension.getURL('popup.html');
+chrome.extension.onRequest.addListener(
+	function(request, sender, sendResponse) {
+		if (request.lic) {
+			var t='';
+			for (prop in sender['tab']) {
+				t+=prop+': '+sender[prop]+' ';
+			}
+			alert(t);
+			var views = chrome.extension.getViews();
+			for (var x=0; x<views.length; x++) {
+				var view = views[x];
+				if (view.location.href == popupTabUrl) {
+					alert('got it');
+					view.showData(request.lic);
+					break;
+				}
+			}
+		}
+		sendResponse({});
+	});
+*/
+</script>
+</html>
